@@ -1,0 +1,184 @@
+CREATE DATABASE EmployeePayroll;
+USE EmployeePayroll;
+
+CREATE TABLE Department(
+DepartmentID INT PRIMARY KEY,
+DepartmentName VARCHAR(50),
+Location VARCHAR(50)
+);
+
+CREATE TABLE Employee(
+EmployeeID INT PRIMARY KEY,
+FirstName VARCHAR(30),
+LastName VARCHAR(30),
+Gender VARCHAR(10),
+DOB DATE,
+Phone VARCHAR(15),
+Email VARCHAR(50),
+Address VARCHAR(100),
+HireDate DATE,
+DepartmentID INT,
+Designation VARCHAR(50),
+BasicSalary DECIMAL(10,2),
+FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID)
+);
+
+CREATE TABLE Attendance(
+AttendanceID INT PRIMARY KEY,
+EmployeeID INT,
+AttendanceDate DATE,
+Status VARCHAR(20),
+FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID)
+);
+
+CREATE TABLE LeaveDetails(
+LeaveID INT PRIMARY KEY,
+EmployeeID INT,
+LeaveType VARCHAR(30),
+StartDate DATE,
+EndDate DATE,
+Reason VARCHAR(100),
+Status VARCHAR(20),
+FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID)
+);
+
+CREATE TABLE Salary(
+SalaryID INT PRIMARY KEY,
+EmployeeID INT,
+BasicSalary DECIMAL(10,2),
+Bonus DECIMAL(10,2),
+Deduction DECIMAL(10,2),
+NetSalary DECIMAL(10,2),
+PayDate DATE,
+FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID)
+);
+
+CREATE TABLE BankDetails(
+BankID INT PRIMARY KEY,
+EmployeeID INT,
+BankName VARCHAR(50),
+AccountNumber VARCHAR(20),
+IFSCCode VARCHAR(20),
+FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID)
+);
+
+INSERT INTO Department VALUES
+(1,'Human Resource','Delhi'),
+(2,'Finance','Delhi'),
+(3,'IT','Noida'),
+(4,'Marketing','Gurgaon');
+
+INSERT INTO Employee VALUES
+(101,'Aman','Kumar','Male','2004-02-10','9876543210','aman@gmail.com','Delhi','2025-01-10',3,'Software Developer',50000),
+(102,'Mohd','Sadaf','Male','2003-08-22','9876543211','sadaf@gmail.com','Delhi','2025-02-15',2,'Accountant',45000),
+(103,'Riya','Sharma','Female','2002-05-18','9876543212','riya@gmail.com','Noida','2025-03-20',1,'HR Executive',40000),
+(104,'Ankit','Verma','Male','2001-09-12','9876543213','ankit@gmail.com','Ghaziabad','2025-04-05',4,'Marketing Executive',42000);
+
+INSERT INTO Attendance VALUES
+(1,101,'2026-07-01','Present'),
+(2,102,'2026-07-01','Present'),
+(3,103,'2026-07-01','Absent'),
+(4,104,'2026-07-01','Present');
+
+INSERT INTO LeaveDetails VALUES
+(1,103,'Sick Leave','2026-07-01','2026-07-03','Fever','Approved'),
+(2,104,'Casual Leave','2026-07-10','2026-07-12','Personal Work','Pending');
+
+INSERT INTO Salary VALUES
+(1,101,50000,5000,1000,54000,'2026-07-31'),
+(2,102,45000,3000,500,47500,'2026-07-31'),
+(3,103,40000,2000,1000,41000,'2026-07-31'),
+(4,104,42000,2500,700,43800,'2026-07-31');
+
+INSERT INTO BankDetails VALUES
+(1,101,'SBI','12345678901','SBIN0001234'),
+(2,102,'PNB','12345678902','PUNB0001234'),
+(3,103,'HDFC','12345678903','HDFC0001234'),
+(4,104,'ICICI','12345678904','ICIC0001234');
+
+CREATE VIEW EmployeeSalaryDetails AS
+SELECT
+E.EmployeeID,
+CONCAT(E.FirstName,' ',E.LastName) AS EmployeeName,
+D.DepartmentName,
+S.NetSalary,
+S.PayDate
+FROM Employee E
+JOIN Department D ON E.DepartmentID=D.DepartmentID
+JOIN Salary S ON E.EmployeeID=S.EmployeeID;
+
+DELIMITER $$
+
+CREATE PROCEDURE GetEmployeeSalary(IN empid INT)
+BEGIN
+SELECT
+E.EmployeeID,
+CONCAT(E.FirstName,' ',E.LastName) AS EmployeeName,
+S.BasicSalary,
+S.Bonus,
+S.Deduction,
+S.NetSalary
+FROM Employee E
+JOIN Salary S
+ON E.EmployeeID=S.EmployeeID
+WHERE E.EmployeeID=empid;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE FUNCTION CalculateNetSalary(
+basic DECIMAL(10,2),
+bonus DECIMAL(10,2),
+deduction DECIMAL(10,2)
+)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+RETURN basic+bonus-deduction;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER UpdateSalary
+BEFORE INSERT ON Salary
+FOR EACH ROW
+BEGIN
+SET NEW.NetSalary=NEW.BasicSalary+NEW.Bonus-NEW.Deduction;
+END$$
+
+DELIMITER ;
+
+CREATE INDEX idx_employee_name ON Employee(FirstName);
+CREATE INDEX idx_department_name ON Department(DepartmentName);
+
+SELECT * FROM Employee;
+SELECT * FROM Department;
+SELECT * FROM Attendance;
+SELECT * FROM LeaveDetails;
+SELECT * FROM Salary;
+SELECT * FROM BankDetails;
+
+SELECT
+CONCAT(E.FirstName,' ',E.LastName) AS EmployeeName,
+D.DepartmentName,
+E.Designation,
+S.NetSalary
+FROM Employee E
+JOIN Department D ON E.DepartmentID=D.DepartmentID
+JOIN Salary S ON E.EmployeeID=S.EmployeeID;
+
+SELECT * FROM Salary WHERE NetSalary>45000;
+
+SELECT COUNT(*) AS TotalEmployees FROM Employee;
+
+SELECT SUM(NetSalary) AS TotalPayroll FROM Salary;
+
+CALL GetEmployeeSalary(101);
+
+SELECT CalculateNetSalary(50000,5000,1000);
+
+SELECT * FROM EmployeeSalaryDetails;
