@@ -1,0 +1,229 @@
+DROP DATABASE IF EXISTS HospitalPatientTracker;
+CREATE DATABASE HospitalPatientTracker;
+USE HospitalPatientTracker;
+
+CREATE TABLE Department (
+    DepartmentID INT AUTO_INCREMENT PRIMARY KEY,
+    DepartmentName VARCHAR(50) NOT NULL,
+    Location VARCHAR(50)
+);
+
+CREATE TABLE Doctor (
+    DoctorID INT AUTO_INCREMENT PRIMARY KEY,
+    DoctorName VARCHAR(60) NOT NULL,
+    Gender ENUM('Male','Female'),
+    Specialization VARCHAR(50),
+    Phone VARCHAR(15) UNIQUE,
+    Email VARCHAR(80) UNIQUE,
+    DepartmentID INT,
+    FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID)
+);
+
+CREATE TABLE Patient (
+    PatientID INT AUTO_INCREMENT PRIMARY KEY,
+    FirstName VARCHAR(40),
+    LastName VARCHAR(40),
+    Gender ENUM('Male','Female','Other'),
+    DOB DATE,
+    BloodGroup VARCHAR(5),
+    Phone VARCHAR(15) UNIQUE,
+    Address VARCHAR(150),
+    EmergencyContact VARCHAR(15),
+    RegistrationDate DATE DEFAULT (CURRENT_DATE)
+);
+
+CREATE TABLE Appointment (
+    AppointmentID INT AUTO_INCREMENT PRIMARY KEY,
+    PatientID INT,
+    DoctorID INT,
+    AppointmentDate DATE,
+    AppointmentTime TIME,
+    Status ENUM('Booked','Completed','Cancelled'),
+    Reason VARCHAR(200),
+    FOREIGN KEY (PatientID) REFERENCES Patient(PatientID),
+    FOREIGN KEY (DoctorID) REFERENCES Doctor(DoctorID)
+);
+
+CREATE TABLE Admission (
+    AdmissionID INT AUTO_INCREMENT PRIMARY KEY,
+    PatientID INT,
+    WardNo VARCHAR(10),
+    BedNo VARCHAR(10),
+    AdmissionDate DATE,
+    DischargeDate DATE,
+    Diagnosis VARCHAR(150),
+    FOREIGN KEY (PatientID) REFERENCES Patient(PatientID)
+);
+
+CREATE TABLE Medicine (
+    MedicineID INT AUTO_INCREMENT PRIMARY KEY,
+    MedicineName VARCHAR(60),
+    Manufacturer VARCHAR(50),
+    Price DECIMAL(8,2),
+    Stock INT
+);
+
+CREATE TABLE Prescription (
+    PrescriptionID INT AUTO_INCREMENT PRIMARY KEY,
+    AppointmentID INT,
+    MedicineID INT,
+    Dosage VARCHAR(50),
+    Duration VARCHAR(30),
+    FOREIGN KEY (AppointmentID) REFERENCES Appointment(AppointmentID),
+    FOREIGN KEY (MedicineID) REFERENCES Medicine(MedicineID)
+);
+
+CREATE TABLE Billing (
+    BillID INT AUTO_INCREMENT PRIMARY KEY,
+    PatientID INT,
+    AdmissionID INT,
+    BillDate DATE,
+    RoomCharges DECIMAL(10,2),
+    MedicineCharges DECIMAL(10,2),
+    DoctorFees DECIMAL(10,2),
+    OtherCharges DECIMAL(10,2),
+    TotalAmount DECIMAL(10,2),
+    PaymentStatus ENUM('Paid','Pending'),
+    FOREIGN KEY (PatientID) REFERENCES Patient(PatientID),
+    FOREIGN KEY (AdmissionID) REFERENCES Admission(AdmissionID)
+);
+
+INSERT INTO Department (DepartmentName, Location) VALUES
+('Cardiology','Block A'),
+('Orthopedics','Block B'),
+('Neurology','Block C'),
+('Pediatrics','Block D'),
+('General Medicine','Block E');
+
+INSERT INTO Doctor (DoctorName, Gender, Specialization, Phone, Email, DepartmentID) VALUES
+('Dr. Amit Sharma','Male','Cardiologist','9876543210','amit@gmail.com',1),
+('Dr. Priya Singh','Female','Orthopedic','9876543211','priya@gmail.com',2),
+('Dr. Rahul Verma','Male','Neurologist','9876543212','rahul@gmail.com',3),
+('Dr. Neha Kapoor','Female','Pediatrician','9876543213','neha@gmail.com',4),
+('Dr. Karan Mehta','Male','General Physician','9876543214','karan@gmail.com',5);
+
+INSERT INTO Patient (FirstName, LastName, Gender, DOB, BloodGroup, Phone, Address, EmergencyContact) VALUES
+('Aman','Kumar','Male','2004-02-10','B+','9876541111','Delhi','9999991111'),
+('Mohd','Sadaf','Male','2003-08-22','O+','9876542222','Delhi','9999992222'),
+('Riya','Sharma','Female','2002-11-18','A+','9876543333','Noida','9999993333'),
+('Ankit','Verma','Male','2001-03-15','AB+','9876544444','Ghaziabad','9999994444'),
+('Pooja','Gupta','Female','1999-09-20','O-','9876545555','Delhi','9999995555');
+
+INSERT INTO Appointment (PatientID, DoctorID, AppointmentDate, AppointmentTime, Status, Reason) VALUES
+(1,1,'2026-07-01','10:00:00','Completed','Chest Pain'),
+(2,2,'2026-07-02','11:00:00','Booked','Leg Fracture'),
+(3,3,'2026-07-03','01:30:00','Completed','Migraine'),
+(4,5,'2026-07-04','02:30:00','Booked','Fever'),
+(5,4,'2026-07-05','12:00:00','Completed','Child Checkup');
+
+INSERT INTO Admission (PatientID, WardNo, BedNo, AdmissionDate, DischargeDate, Diagnosis) VALUES
+(1,'A1','B1','2026-07-01','2026-07-05','Heart Disease'),
+(3,'C2','A5','2026-07-03','2026-07-06','Brain Infection');
+
+INSERT INTO Medicine (MedicineName, Manufacturer, Price, Stock) VALUES
+('Paracetamol','Sun Pharma',25,500),
+('Crocin','GSK',35,300),
+('Azithromycin','Cipla',150,150),
+('Dolo 650','Micro Labs',40,250),
+('Amoxicillin','Mankind',90,180);
+
+INSERT INTO Prescription (AppointmentID, MedicineID, Dosage, Duration) VALUES
+(1,1,'2 Tablets Daily','5 Days'),
+(2,3,'1 Tablet Daily','7 Days'),
+(3,4,'1 Tablet Daily','10 Days'),
+(4,2,'3 Tablets Daily','4 Days'),
+(5,5,'2 Tablets Daily','6 Days');
+
+INSERT INTO Billing (PatientID, AdmissionID, BillDate, RoomCharges, MedicineCharges, DoctorFees, OtherCharges, TotalAmount, PaymentStatus) VALUES
+(1,1,'2026-07-05',10000,2500,3000,500,16000,'Paid'),
+(3,2,'2026-07-06',12000,3500,2500,700,18700,'Pending');
+
+CREATE VIEW PatientAppointments AS
+SELECT
+P.PatientID,
+CONCAT(P.FirstName,' ',P.LastName) AS PatientName,
+D.DoctorName,
+A.AppointmentDate,
+A.AppointmentTime,
+A.Status
+FROM Patient P
+JOIN Appointment A ON P.PatientID=A.PatientID
+JOIN Doctor D ON D.DoctorID=A.DoctorID;
+
+DELIMITER $$
+
+CREATE PROCEDURE GetPatientHistory(IN pid INT)
+BEGIN
+SELECT
+P.PatientID,
+CONCAT(P.FirstName,' ',P.LastName) AS Patient,
+D.DoctorName,
+A.AppointmentDate,
+A.Reason,
+A.Status
+FROM Patient P
+JOIN Appointment A ON P.PatientID=A.PatientID
+JOIN Doctor D ON A.DoctorID=D.DoctorID
+WHERE P.PatientID=pid;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE FUNCTION CalculateBill(
+room DECIMAL(10,2),
+medicine DECIMAL(10,2),
+doctor DECIMAL(10,2),
+othercharge DECIMAL(10,2)
+)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+RETURN room+medicine+doctor+othercharge;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER ReduceMedicineStock
+AFTER INSERT ON Prescription
+FOR EACH ROW
+BEGIN
+UPDATE Medicine
+SET Stock=Stock-1
+WHERE MedicineID=NEW.MedicineID;
+END$$
+
+DELIMITER ;
+
+CREATE INDEX idx_patient_name ON Patient(FirstName,LastName);
+CREATE INDEX idx_doctor_name ON Doctor(DoctorName);
+CREATE INDEX idx_appointment_date ON Appointment(AppointmentDate);
+
+SELECT * FROM Patient;
+SELECT * FROM Doctor;
+SELECT * FROM Department;
+SELECT * FROM Appointment;
+SELECT * FROM Admission;
+SELECT * FROM Medicine;
+SELECT * FROM Prescription;
+SELECT * FROM Billing;
+
+SELECT CONCAT(P.FirstName,' ',P.LastName) AS Patient,D.DoctorName,A.AppointmentDate
+FROM Patient P
+JOIN Appointment A ON P.PatientID=A.PatientID
+JOIN Doctor D ON D.DoctorID=A.DoctorID;
+
+SELECT * FROM Billing WHERE PaymentStatus='Pending';
+
+SELECT COUNT(*) AS TotalPatients FROM Patient;
+
+SELECT SUM(TotalAmount) AS TotalRevenue FROM Billing;
+
+CALL GetPatientHistory(1);
+
+SELECT CalculateBill(1000,500,700,300);
+
+SELECT * FROM PatientAppointments;
