@@ -1,0 +1,109 @@
+CREATE DATABASE LibraryDB;
+USE LibraryDB;
+
+CREATE TABLE Members (
+    MemberID INT AUTO_INCREMENT PRIMARY KEY,
+    FullName VARCHAR(100) NOT NULL,
+    Email VARCHAR(100) UNIQUE,
+    Phone VARCHAR(15),
+    Address VARCHAR(200),
+    JoinDate DATE
+);
+
+CREATE TABLE Authors (
+    AuthorID INT AUTO_INCREMENT PRIMARY KEY,
+    AuthorName VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Books (
+    BookID INT AUTO_INCREMENT PRIMARY KEY,
+    Title VARCHAR(150) NOT NULL,
+    AuthorID INT,
+    Category VARCHAR(50),
+    ISBN VARCHAR(20) UNIQUE,
+    PublishedYear INT,
+    CopiesAvailable INT DEFAULT 1,
+    FOREIGN KEY (AuthorID) REFERENCES Authors(AuthorID)
+);
+
+CREATE TABLE Librarians (
+    LibrarianID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100),
+    Email VARCHAR(100),
+    Phone VARCHAR(15)
+);
+
+CREATE TABLE IssueBook (
+    IssueID INT AUTO_INCREMENT PRIMARY KEY,
+    MemberID INT,
+    BookID INT,
+    LibrarianID INT,
+    IssueDate DATE,
+    DueDate DATE,
+    ReturnDate DATE,
+    FOREIGN KEY (MemberID) REFERENCES Members(MemberID),
+    FOREIGN KEY (BookID) REFERENCES Books(BookID),
+    FOREIGN KEY (LibrarianID) REFERENCES Librarians(LibrarianID)
+);
+
+CREATE TABLE Fine (
+    FineID INT AUTO_INCREMENT PRIMARY KEY,
+    IssueID INT,
+    FineAmount DECIMAL(10,2),
+    PaidStatus VARCHAR(20),
+    FOREIGN KEY (IssueID) REFERENCES IssueBook(IssueID)
+);
+
+INSERT INTO Authors (AuthorName) VALUES
+('J.K. Rowling'),
+('Chetan Bhagat'),
+('Dan Brown');
+
+INSERT INTO Books (Title, AuthorID, Category, ISBN, PublishedYear, CopiesAvailable) VALUES
+('Harry Potter',1,'Fantasy','9781111111111',1997,5),
+('Five Point Someone',2,'Novel','9782222222222',2004,3),
+('The Da Vinci Code',3,'Mystery','9783333333333',2003,4);
+
+INSERT INTO Members (FullName, Email, Phone, Address, JoinDate) VALUES
+('Rahul Sharma','rahul@gmail.com','9876543210','Delhi','2025-01-10'),
+('Aman Khan','aman@gmail.com','aman@gmail.com','Mumbai','2025-02-15'),
+('Priya Singh','priya@gmail.com','9876543212','Jaipur','2025-03-01');
+
+INSERT INTO Librarians (Name, Email, Phone) VALUES
+('Neha','neha@library.com','9999999999'),
+('Ravi','ravi@library.com','8888888888');
+
+INSERT INTO IssueBook (MemberID, BookID, LibrarianID, IssueDate, DueDate, ReturnDate) VALUES
+(1,1,1,'2025-06-01','2025-06-15','2025-06-12'),
+(2,2,2,'2025-06-05','2025-06-20',NULL);
+
+INSERT INTO Fine (IssueID, FineAmount, PaidStatus) VALUES
+(2,100.00,'Unpaid');
+
+SELECT * FROM Members;
+
+SELECT * FROM Books;
+
+SELECT Books.BookID, Books.Title, Authors.AuthorName, Books.Category
+FROM Books
+JOIN Authors ON Books.AuthorID = Authors.AuthorID;
+
+SELECT IssueBook.IssueID, Members.FullName, Books.Title,
+IssueBook.IssueDate, IssueBook.DueDate, IssueBook.ReturnDate
+FROM IssueBook
+JOIN Members ON IssueBook.MemberID = Members.MemberID
+JOIN Books ON IssueBook.BookID = Books.BookID;
+
+SELECT Members.FullName, Books.Title, IssueBook.DueDate
+FROM IssueBook
+JOIN Members ON IssueBook.MemberID = Members.MemberID
+JOIN Books ON IssueBook.BookID = Books.BookID
+WHERE ReturnDate IS NULL;
+
+SELECT COUNT(*) AS TotalBooks FROM Books;
+
+SELECT COUNT(*) AS TotalMembers FROM Members;
+
+SELECT Title, CopiesAvailable FROM Books;
+
+SELECT SUM(FineAmount) AS TotalFine FROM Fine;
