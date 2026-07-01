@@ -1,0 +1,28 @@
+CREATE DATABASE EcommerceDB;
+USE EcommerceDB;
+
+CREATE TABLE Categories (
+    CategoryID INT AUTO_INCREMENT PRIMARY KEY,
+    CategoryName VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Suppliers (
+    SupplierID INT AUTO_INCREMENT PRIMARY KEY,
+    SupplierName VARCHAR(100) NOT NULL,
+    ContactPerson VARCHAR(100),
+    Phone VARCHAR(15),
+    Email VARCHAR(100),
+    Address VARCHAR(200)
+);
+
+CREATE TABLE Products (
+    ProductID INT AUTO_INCREMENT PRIMARY KEY,
+    ProductName VARCHAR(150) NOT NULL,
+    CategoryID INT,
+    SupplierID INT,
+    Price DECIMAL(10,2),
+    Stock INT DEFAULT 0,
+    Description TEXT,
+    FOREIGN KEY (CategoryID) REFERENCES Categories(CategoryID),
+    FOREIGN KEY (SupplierID) REFERENCES Suppliers(SupplierID)
+);
