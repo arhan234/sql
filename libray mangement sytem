@@ -1,7 +1,6 @@
 CREATE DATABASE LibraryDB;
 USE LibraryDB;
 
--- Members Table
 CREATE TABLE Members (
     MemberID INT AUTO_INCREMENT PRIMARY KEY,
     FullName VARCHAR(100) NOT NULL,
@@ -11,13 +10,11 @@ CREATE TABLE Members (
     JoinDate DATE
 );
 
--- Authors Table
 CREATE TABLE Authors (
     AuthorID INT AUTO_INCREMENT PRIMARY KEY,
     AuthorName VARCHAR(100) NOT NULL
 );
 
--- Books Table
 CREATE TABLE Books (
     BookID INT AUTO_INCREMENT PRIMARY KEY,
     Title VARCHAR(150) NOT NULL,
@@ -29,7 +26,6 @@ CREATE TABLE Books (
     FOREIGN KEY (AuthorID) REFERENCES Authors(AuthorID)
 );
 
--- Librarians Table
 CREATE TABLE Librarians (
     LibrarianID INT AUTO_INCREMENT PRIMARY KEY,
     Name VARCHAR(100),
@@ -37,7 +33,6 @@ CREATE TABLE Librarians (
     Phone VARCHAR(15)
 );
 
--- IssueBook Table
 CREATE TABLE IssueBook (
     IssueID INT AUTO_INCREMENT PRIMARY KEY,
     MemberID INT,
@@ -51,7 +46,6 @@ CREATE TABLE IssueBook (
     FOREIGN KEY (LibrarianID) REFERENCES Librarians(LibrarianID)
 );
 
--- Fine Table
 CREATE TABLE Fine (
     FineID INT AUTO_INCREMENT PRIMARY KEY,
     IssueID INT,
@@ -60,107 +54,56 @@ CREATE TABLE Fine (
     FOREIGN KEY (IssueID) REFERENCES IssueBook(IssueID)
 );
 
--- Insert Authors
 INSERT INTO Authors (AuthorName) VALUES
 ('J.K. Rowling'),
 ('Chetan Bhagat'),
 ('Dan Brown');
 
--- Insert Books
-INSERT INTO Books
-(Title, AuthorID, Category, ISBN, PublishedYear, CopiesAvailable)
-VALUES
-('Harry Potter', 1, 'Fantasy', '9781111111111', 1997, 5),
-('Five Point Someone', 2, 'Novel', '9782222222222', 2004, 3),
-('The Da Vinci Code', 3, 'Mystery', '9783333333333', 2003, 4);
+INSERT INTO Books (Title, AuthorID, Category, ISBN, PublishedYear, CopiesAvailable) VALUES
+('Harry Potter',1,'Fantasy','9781111111111',1997,5),
+('Five Point Someone',2,'Novel','9782222222222',2004,3),
+('The Da Vinci Code',3,'Mystery','9783333333333',2003,4);
 
--- Insert Members
-INSERT INTO Members
-(FullName, Email, Phone, Address, JoinDate)
-VALUES
-('Rahul Sharma', 'rahul@gmail.com', '9876543210', 'Delhi', '2025-01-10'),
-('Aman Khan', 'aman@gmail.com', '9876543211', 'Mumbai', '2025-02-15'),
-('Priya Singh', 'priya@gmail.com', '9876543212', 'Jaipur', '2025-03-01');
+INSERT INTO Members (FullName, Email, Phone, Address, JoinDate) VALUES
+('Rahul Sharma','rahul@gmail.com','9876543210','Delhi','2025-01-10'),
+('Aman Khan','aman@gmail.com','aman@gmail.com','Mumbai','2025-02-15'),
+('Priya Singh','priya@gmail.com','9876543212','Jaipur','2025-03-01');
 
--- Insert Librarians
 INSERT INTO Librarians (Name, Email, Phone) VALUES
-('Neha', 'neha@library.com', '9999999999'),
-('Ravi', 'ravi@library.com', '8888888888');
+('Neha','neha@library.com','9999999999'),
+('Ravi','ravi@library.com','8888888888');
 
--- Insert Issued Books
-INSERT INTO IssueBook
-(MemberID, BookID, LibrarianID, IssueDate, DueDate, ReturnDate)
-VALUES
-(1, 1, 1, '2025-06-01', '2025-06-15', '2025-06-12'),
-(2, 2, 2, '2025-06-05', '2025-06-20', NULL);
+INSERT INTO IssueBook (MemberID, BookID, LibrarianID, IssueDate, DueDate, ReturnDate) VALUES
+(1,1,1,'2025-06-01','2025-06-15','2025-06-12'),
+(2,2,2,'2025-06-05','2025-06-20',NULL);
 
--- Insert Fine
-INSERT INTO Fine (IssueID, FineAmount, PaidStatus)
-VALUES
-(2, 100.00, 'Unpaid');
+INSERT INTO Fine (IssueID, FineAmount, PaidStatus) VALUES
+(2,100.00,'Unpaid');
 
-
--- =========================
--- QUERIES
--- =========================
-
--- 1. Display all members
 SELECT * FROM Members;
 
--- 2. Display all books
 SELECT * FROM Books;
 
--- 3. Display books with author names
-SELECT 
-    Books.BookID,
-    Books.Title,
-    Authors.AuthorName,
-    Books.Category
+SELECT Books.BookID, Books.Title, Authors.AuthorName, Books.Category
 FROM Books
-JOIN Authors 
-ON Books.AuthorID = Authors.AuthorID;
+JOIN Authors ON Books.AuthorID = Authors.AuthorID;
 
--- 4. Display issued book details
-SELECT 
-    IssueBook.IssueID,
-    Members.FullName,
-    Books.Title,
-    IssueBook.IssueDate,
-    IssueBook.DueDate,
-    IssueBook.ReturnDate
+SELECT IssueBook.IssueID, Members.FullName, Books.Title,
+IssueBook.IssueDate, IssueBook.DueDate, IssueBook.ReturnDate
 FROM IssueBook
-JOIN Members 
-ON IssueBook.MemberID = Members.MemberID
-JOIN Books 
-ON IssueBook.BookID = Books.BookID;
+JOIN Members ON IssueBook.MemberID = Members.MemberID
+JOIN Books ON IssueBook.BookID = Books.BookID;
 
--- 5. Display currently issued books
-SELECT 
-    Members.FullName,
-    Books.Title,
-    IssueBook.DueDate
+SELECT Members.FullName, Books.Title, IssueBook.DueDate
 FROM IssueBook
-JOIN Members 
-ON IssueBook.MemberID = Members.MemberID
-JOIN Books 
-ON IssueBook.BookID = Books.BookID
-WHERE IssueBook.ReturnDate IS NULL;
+JOIN Members ON IssueBook.MemberID = Members.MemberID
+JOIN Books ON IssueBook.BookID = Books.BookID
+WHERE ReturnDate IS NULL;
 
--- 6. Count total books
-SELECT COUNT(*) AS TotalBooks
-FROM Books;
+SELECT COUNT(*) AS TotalBooks FROM Books;
 
--- 7. Count total members
-SELECT COUNT(*) AS TotalMembers
-FROM Members;
+SELECT COUNT(*) AS TotalMembers FROM Members;
 
--- 8. Display book titles and available copies
-SELECT 
-    Title,
-    CopiesAvailable
-FROM Books;
+SELECT Title, CopiesAvailable FROM Books;
 
--- 9. Calculate total fine
-SELECT 
-    SUM(FineAmount) AS TotalFine
-FROM Fine;
+SELECT SUM(FineAmount) AS TotalFine FROM Fine;
